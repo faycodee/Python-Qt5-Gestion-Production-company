@@ -2,37 +2,25 @@ from pymongo import MongoClient
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QVBoxLayout
 
 
-conn = MongoClient(host='localhost', port=27017)
 
-
-db = conn.Productions
-
-
-region_collection = db.region_collection.find()
-
-
-conn.close()
-
-conn = MongoClient(host='localhost', port=27017)
-
-
-db = conn.Productions
-region_collection = db.region_collection.find()
-conn.close()
+def ListerRegion():
+ conn = MongoClient(host='localhost', port=27017)
+ db = conn.Productions
+ region_collection = db.Région.find()
+ for region in region_collection:
+    reg.addItem(region["nom"])
+ conn.close()
 
 
 app = QApplication([])
 window = QWidget()
 
 # إنشاء ComboBox
-cmb1 = QComboBox(window)
-cmb1.addItem("DT")
-cmb1.addItem("SM")
-cmb1.addItem("TH")
-
+reg = QComboBox(window)
+ListerRegion()
 # وضع ComboBox في واجهة المستخدم
 layout = QVBoxLayout()
-layout.addWidget(cmb1)
+layout.addWidget(reg)
 window.setLayout(layout)
 window.show()
 
