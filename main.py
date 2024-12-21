@@ -14,6 +14,9 @@ def fetch_regions():
     return regions
 
 
+
+
+
 def fetch_productions(selected_region=None):
     client = MongoClient("mongodb://localhost:27017/")
     db = client["Productions"]
