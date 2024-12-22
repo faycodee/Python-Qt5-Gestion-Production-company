@@ -5,29 +5,44 @@ from PyQt5.QtWidgets import (
 from pymongo import MongoClient
 
 
+def test_connection():
+    try:
+        client = MongoClient("mongodb://localhost:27017/")
+        client.admin.command('ping')
+        print("MongoDB connection successful.")
+    except Exception as e:
+        print(f"Connection failed: {e}")
+        QMessageBox.critical(None, "Erreur", "Échec de connexion à MongoDB. Assurez-vous que le serveur est en marche.")
+
+
 def fetch_regions():
-    conn = MongoClient(host='localhost', port=27017)
-    db = conn.Productions
-    region_collection = db.Région.find()
-    regions = [region["nom"] for region in region_collection]
-    conn.close()
-    return regions
-
-
-
+    try:
+        conn = MongoClient(host='localhost', port=27017)
+        db = conn.Productions
+        region_collection = db.Région.find()
+        regions = [region["nom"] for region in region_collection]
+        conn.close()
+        return regions if regions else ["Aucune région disponible"]
+    except Exception as e:
+        print(f"Error fetching regions: {e}")
+        return ["Erreur de connexion"]
 
 
 def fetch_productions(selected_region=None):
-    client = MongoClient("mongodb://localhost:27017/")
-    db = client["Productions"]
-    production_collection = db["Productions"]
+    try:
+        client = MongoClient("mongodb://localhost:27017/")
+        db = client["Productions"]
+        production_collection = db["Productions"]
 
-    if selected_region:
-        productions = production_collection.find({"nomRégion": selected_region})
-    else:
-        productions = production_collection.find()
-    
-    return list(productions)
+        if selected_region and selected_region != "Toutes":
+            productions = production_collection.find({"nomRégion": selected_region})
+        else:
+            productions = production_collection.find()
+
+        return list(productions)
+    except Exception as e:
+        print(f"Error fetching productions: {e}")
+        return []
 
 
 class ProductionApp(QWidget):
@@ -45,7 +60,7 @@ class ProductionApp(QWidget):
         # Filter by region
         self.region_label = QLabel("Sélectionnez une région:")
         self.selectInput = QComboBox()
-        self.selectInput.addItems(fetch_regions())
+        self.selectInput.addItems(["Toutes"] + fetch_regions())
         self.selectInput.currentTextChanged.connect(self.update_table)
 
         self.filter_layout.addWidget(self.region_label)
@@ -122,7 +137,6 @@ class ProductionApp(QWidget):
             self.table.setItem(row, 4, QTableWidgetItem(prod["EmployéPerformance"]))
 
     def add_entry(self):
-        # Validate and collect input
         try:
             code = int(self.code_input.text())
             region = self.region_input.text().strip()
@@ -154,7 +168,6 @@ class ProductionApp(QWidget):
             QMessageBox.warning(self, "Erreur", f"Une erreur est survenue: {e}")
 
     def delete_entry(self):
-        # Delete the selected entry
         selected_row = self.table.currentRow()
         if selected_row != -1:
             code = self.table.item(selected_row, 0).text()
@@ -169,6 +182,7 @@ class ProductionApp(QWidget):
 
 
 if __name__ == "__main__":
+    test_connection()
     app = QApplication([])
     window = ProductionApp()
     window.show()
